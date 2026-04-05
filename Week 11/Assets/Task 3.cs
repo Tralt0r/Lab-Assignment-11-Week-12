@@ -2,7 +2,7 @@ using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 
-public class HonorCardGame : MonoBehaviour
+public class Task3 : MonoBehaviour
 {
     List<string> deck = new List<string>();
     List<string> hand = new List<string>();
