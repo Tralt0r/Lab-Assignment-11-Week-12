@@ -1,0 +1,10 @@
+<Enemies>
+  <Enemy>
+    <Name>Slime</Name>
+    <HP>50</HP>
+  </Enemy>
+  <Enemy>
+    <Name>Goblin</Name>
+    <HP>100</HP>
+  </Enemy>
+</Enemies>
