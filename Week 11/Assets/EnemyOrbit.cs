@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class EnemyOrbit : MonoBehaviour
+public abstract class EnemyOrbit : MonoBehaviour
 {
     //Target ship
     public Transform player;
@@ -21,49 +21,62 @@ public class EnemyOrbit : MonoBehaviour
     public float avoidStrength = 4f;
     //List of every enemy
     static readonly List<EnemyOrbit> all = new List<EnemyOrbit>();
+    //Game manager ref
+    [SerializeField]private GameManager gameManager;
 
     void Start()
     {
         //Random direction
         orbitDir = Random.value < 0.5f ? 1 : -1;
+        player = FindAnyObjectByType<Player>().transform;
+        gameManager = FindAnyObjectByType<GameManager>();
     }
 
-    void Update()
+    protected virtual void Update()
     {
-        //Get direction of player
-        Vector3 toPlayer = player.position - transform.position;
-        toPlayer.z = 0f;
-        //Distance and direction
-        float sqrDist = toPlayer.sqrMagnitude;
-        Vector3 inward = toPlayer.normalized;
-        //Change speed based on distance
-        float distance = Mathf.Clamp01(sqrDist / (farDistance * farDistance));
-        float speed = Mathf.Lerp(minSpeed, maxSpeed, distance);
-        //Move around player
-        Vector3 tangent = new Vector3(-inward.y, inward.x, 0f) * orbitDir;
-        float radiusError = Mathf.Clamp(toPlayer.magnitude - orbitRadius, -1f, 1f);
-        Vector3 desired = tangent + inward * (radiusError * radialGain);
-        if (desired.sqrMagnitude > 1f) desired = desired.normalized;
-        //make enemies avoid player
-        Vector3 avoid = Vector3.zero;
-        float totalAvoid = avoidRadius * avoidRadius;
-        for (int i = 0; i < all.Count; i++)
+        
+        if (transform.position.y < -11f)
         {
-            EnemyOrbit other = all[i];
-            if (other == this) continue;
-            //Distance between enemies
-            Vector3 away = transform.position - other.transform.position;
-            away.z = 0f;
-            float s = away.sqrMagnitude;
-            //Push enemies away
-            if (s < totalAvoid && s > 0.0001f)
-                avoid += away.normalized * (1f - s / totalAvoid);
+            Destroy(this.gameObject);
         }
-        //Orbit and avoid player
-        Vector3 velocity = desired * speed + avoid * avoidStrength;
-        transform.position += velocity * Time.deltaTime;
-        //Look at player
-        FaceDirection(inward);
+        if (!gameManager.gameOver)
+        {
+            //Get direction of player
+            Vector3 toPlayer = player.position - transform.position;
+            toPlayer.z = 0f;
+            //Distance and direction
+            float sqrDist = toPlayer.sqrMagnitude;
+            Vector3 inward = toPlayer.normalized;
+            //Change speed based on distance
+            float distance = Mathf.Clamp01(sqrDist / (farDistance * farDistance));
+            float speed = Mathf.Lerp(minSpeed, maxSpeed, distance);
+            //Move around player
+            Vector3 tangent = new Vector3(-inward.y, inward.x, 0f) * orbitDir;
+            float radiusError = Mathf.Clamp(toPlayer.magnitude - orbitRadius, -1f, 1f);
+            Vector3 desired = tangent + inward * (radiusError * radialGain);
+            if (desired.sqrMagnitude > 1f) desired = desired.normalized;
+            //make enemies avoid player
+            Vector3 avoid = Vector3.zero;
+            float totalAvoid = avoidRadius * avoidRadius;
+            for (int i = 0; i < all.Count; i++)
+            {
+                EnemyOrbit other = all[i];
+                if (other == this) continue;
+                //Distance between enemies
+                Vector3 away = transform.position - other.transform.position;
+                away.z = 0f;
+                float s = away.sqrMagnitude;
+                //Push enemies away
+                if (s < totalAvoid && s > 0.0001f)
+                    avoid += away.normalized * (1f - s / totalAvoid);
+            }
+            //Orbit and avoid player
+            Vector3 velocity = desired * speed + avoid * avoidStrength;
+            transform.position += velocity * Time.deltaTime;
+            //Look at player
+            FaceDirection(inward);
+        }
+
     }
 
     void FaceDirection(Vector3 dir)
@@ -90,4 +103,18 @@ public class EnemyOrbit : MonoBehaviour
         //Turn by how much
         transform.Rotate(0f, 0f, step);
     }
+
+    private void OnTriggerEnter2D(Collider2D whatIHit)
+    {
+        if (whatIHit.tag == "Player")
+        {
+            OnPlayerHit(whatIHit);
+        }
+        else if (whatIHit.tag == "Laser")
+        {
+            OnLaserHit(whatIHit);
+        }
+    }
+    protected abstract void OnPlayerHit(Collider2D player);
+    protected abstract void OnLaserHit(Collider2D laser);
 }
