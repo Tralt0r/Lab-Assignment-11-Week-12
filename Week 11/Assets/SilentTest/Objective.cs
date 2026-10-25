@@ -8,8 +8,8 @@ public abstract class Objective : MonoBehaviour
     [SerializeField, TextArea] private string description;
     [SerializeField] private bool triggersOnStart = true;
     [SerializeField, Min(1)] private int phases = 1;
-    [SerializeField] private Sprite objectiveIcon;
-    [SerializeField] private Color objectiveIconColor;
+    public Sprite objectiveIcon;
+    public Color objectiveIconColor;
 
     //Do Not Touch Below: 
     public string Title => title;
