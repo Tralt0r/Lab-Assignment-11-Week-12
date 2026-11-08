@@ -11,7 +11,7 @@ public class ScoreManager : MonoBehaviour, IHitObserver
 
     //On hit add points
     public void OnTargetHit(TargetHitEvent hitEvent) { score += hitEvent.points; hits++; }
-    private string BinPath { get { return System.IO.Path.Combine(Application.persistentDataPath, "score.dat"); } }
+    private string BinPath { get { return System.IO.Path.Combine(Application.persistentDataPath, "score.data"); } }
 
     //UI add points
     void OnGUI()

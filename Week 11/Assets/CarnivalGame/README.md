@@ -1,42 +1,64 @@
-Carnival Game
+Save and Load
 
 
 
-Xavier Rosario
+Press S to save the game and L to load it. The game also loads the last save automatically when it starts, if a save file exists.
 
 
 
-This is our little carnival shooting game. You move a shooter left and right along the bottom and shoot at enemies for points.
+What gets saved
+
+\- The score and hit count
+
+\- The shooter's position
+
+\- The position of every target on screen (plus its speed, points, and color so it can be rebuilt)
 
 
 
-How I used the patterns
+The files
+
+Two files, saved in Unity's `Application.persistentDataPath
+
+\-positions.json = the shooter and target info, saved as JSON
+
+\-score.dat = the score and hits, saved as a binary file
 
 
 
-Object Pool
-
-Instead of making a new bullet every time you shoot, we make 8 bullets at the start and hide them. When you shoot, the shooter grabs one of the hidden ones and fires it. When the bullet hits something or flies off the top of the screen, it hides itself again and goes back in the pile so it can be used later. We never create or destroy bullets while playing. If all 8 are out at once, you just can't shoot until one comes back. There's a counter on the screen so you can watch it happen.
+How it works
 
 
 
-Builder
+ISaveable
 
-Targets have a bunch of settings, so I used a builder to put them together one piece at a time. You chain the settings and then call Build() to get the target. I also made a TargetDirector script that has the premade ones:
-
-Enemy One: slow and big, 10 points
-
-Enemy Two: medium, 25 points
-
-Enemy Three: fast and small, 50 points
+Where everything is saved. It has three things: a SaveID, SavedData, and LoadFromData.
 
 
 
-The spawner just asks the director for a random one every 0.6 seconds to 1.4 seconds.
+TransformSaver
+
+Implements ISaveable. It saves the object's position and scale. The shooter gets a fixed ID. Every target gets one automatically when the TargetBuilder builds it, with a random ID.
 
 
 
-Observer
+SaveManager
 
-When a bullet hits a target, it doesn't update the score itself. It just announces "hey a target got hit" through GameEvents.Hits.Notify(). Anything that signed up to listen gets the message. Right now there is one listener, ScoreManager adds the points. Scripts sign up in `OnEnable` and sign off in `OnDisable`. The cool part is the bullet has no idea the score even exists, so we could add more listeners later without touching the bullet.
+Listens for the S and L keys.
+
+\-Save = it finds everything in the scene that has ISaveable, asks each one for its data, and puts it all in one list. If an object is a target, it also saves its speed, points, and color. The list is written to positions.json. Then the score is written to score.data.
+
+\-Load = it reads positions.json. The shooter is found by its ID and moved back to its original spot. Targets are different because they get destroyed all the time. It deletes the targets on screen, rebuilds each saved target with the TargetBuilder, and moves it to its saved position. Then the score is loaded from score.data.
+
+
+
+Saving the score in binary
+
+ScoreManager has SaveBinary() and LoadBinary(). They use BinaryWriter and BinaryReader to write and read the score.
+
+
+
+Why it's set up this way
+
+Loading targets through the Builder means a loaded target is made the exact same way as a spawned one. SaveManager doesn't know what each object is, it just asks for the save data.
 
