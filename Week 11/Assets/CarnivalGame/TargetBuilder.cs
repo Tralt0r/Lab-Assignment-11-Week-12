@@ -27,6 +27,7 @@ public class TargetBuilder
         go.GetComponent<Renderer>().material.color = color;
         go.GetComponent<Collider>().isTrigger = true;
         Target target = go.AddComponent<Target>();
+        go.AddComponent<TransformSaver>();
         target.speed = speed; target.points = points;
         Reset();
         return target;
